@@ -1,0 +1,27 @@
+{
+  "name": "ichfickdiscord",
+  "version": "1.0.0",
+  "description": "Retro Voice Chat Application with Crystal Clear Audio",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:desktop\"",
+    "dev:server": "cd packages/server && npm run dev",
+    "dev:desktop": "cd packages/desktop && npm run tauri dev",
+    "build": "npm run build:server && npm run build:desktop",
+    "build:server": "cd packages/server && npm run build",
+    "build:desktop": "cd packages/desktop && npm run tauri build",
+    "build:server:deb": "cd packages/server && npm run build:deb",
+    "build:desktop:windows": "cd packages/desktop && npm run tauri:build:windows",
+    "build:all": "npm run build:server:deb && npm run build:desktop:windows",
+    "release": "npm run build:all"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+} 
