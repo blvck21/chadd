@@ -62,6 +62,8 @@ start-server.sh
 start-server.bat
 start-server.ps1
 
+todo.txt
+
 # Rust specific
 Cargo.lock
 target/
