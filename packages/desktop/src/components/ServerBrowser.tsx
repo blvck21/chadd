@@ -521,7 +521,7 @@ export default function ServerBrowser({ onConnect, onClose }: Props) {
   const [host, setHost] = useState("localhost");
   const [port, setPort] = useState("27890");
   const [username, setUsername] = useState(
-    localStorage.getItem("ichfickdiscord-username") || ""
+    localStorage.getItem("CHADD-username") || ""
   );
   const [password, setPassword] = useState("");
   const [servers, setServers] = useState<ServerListItem[]>([]);
@@ -547,7 +547,7 @@ export default function ServerBrowser({ onConnect, onClose }: Props) {
 
   // Load saved servers
   useEffect(() => {
-    const savedServers = localStorage.getItem("ichfickdiscord-servers");
+    const savedServers = localStorage.getItem("CHADD-servers");
     if (savedServers) {
       try {
         const parsed = JSON.parse(savedServers);
@@ -601,7 +601,7 @@ export default function ServerBrowser({ onConnect, onClose }: Props) {
   };
 
   const saveServers = (serverList: ServerListItem[]) => {
-    localStorage.setItem("ichfickdiscord-servers", JSON.stringify(serverList));
+    localStorage.setItem("CHADD-servers", JSON.stringify(serverList));
   };
 
   const addServer = async () => {
@@ -669,7 +669,7 @@ export default function ServerBrowser({ onConnect, onClose }: Props) {
     }
 
     // Save username to localStorage
-    localStorage.setItem("ichfickdiscord-username", username);
+    localStorage.setItem("CHADD-username", username);
     onConnect(server.host, server.port, serverPassword, username);
   };
 
@@ -696,8 +696,8 @@ export default function ServerBrowser({ onConnect, onClose }: Props) {
     <Container>
       <Header>
         <HeaderLeft>
-          <Title>IchFickDiscord</Title>
-          <Subtitle>High-quality retro voice communication</Subtitle>
+          <Title>CHADD</Title>
+          <Subtitle>High-quality communication</Subtitle>
         </HeaderLeft>
         <HeaderRight>
           <CloseButton onClick={onClose}>Close</CloseButton>

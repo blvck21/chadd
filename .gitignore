@@ -19,6 +19,13 @@ packages/desktop/src-tauri/WixTools/
 .env.test.local
 .env.production.local
 
+# Security - GitHub tokens and sensitive data
+.env.*
+*.token
+*.key
+secrets/
+config/secrets.json
+
 # Logs
 *.log
 logs/

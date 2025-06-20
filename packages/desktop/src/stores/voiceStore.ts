@@ -195,7 +195,7 @@ export const useVoiceStore = create<VoiceState & VoiceActions>((set, get) => ({
   serverPort: 0,
   serverInfo: null,
   currentUser: null,
-  username: localStorage.getItem('ichfickdiscord-username') || '',
+  username: localStorage.getItem('CHADD-username') || '',
   currentRoom: null,
   rooms: [],
   availableRooms: [],
@@ -218,21 +218,21 @@ export const useVoiceStore = create<VoiceState & VoiceActions>((set, get) => ({
   chatMessages: new Map(),
   audioSettings: {
     ...defaultAudioSettings,
-    ...JSON.parse(localStorage.getItem('ichfickdiscord-audio-settings') || '{}'),
+    ...JSON.parse(localStorage.getItem('CHADD-audio-settings') || '{}'),
   },
   isMuted: false,
   isDeafened: false,
   isSpeaking: false,
   wasManuallyMuted: false,
-  micVolume: parseInt(localStorage.getItem('ichfickdiscord-mic-volume') || '50'),
-  speakerVolume: parseInt(localStorage.getItem('ichfickdiscord-speaker-volume') || '50'),
+  micVolume: parseInt(localStorage.getItem('CHADD-mic-volume') || '50'),
+  speakerVolume: parseInt(localStorage.getItem('CHADD-speaker-volume') || '50'),
   isPttPressed: false,
   showSettings: false,
   showServerSettings: false,
   serverConfig: {
-    name: "IchFickDiscord Server",
+    name: "CHADD Server",
     description: "A Discord-like voice chat server",
-    motd: "Welcome to IchFickDiscord!",
+    motd: "Welcome to CHADD!",
     maxUsers: 50,
     requirePassword: false,
     password: "",
@@ -623,7 +623,7 @@ export const useVoiceStore = create<VoiceState & VoiceActions>((set, get) => ({
   },
 
   setUsername: (username) => {
-    localStorage.setItem('ichfickdiscord-username', username);
+    localStorage.setItem('CHADD-username', username);
     set({ username });
   },
 
@@ -1340,7 +1340,7 @@ export const useVoiceStore = create<VoiceState & VoiceActions>((set, get) => ({
     }
     
     // Save settings
-    localStorage.setItem('ichfickdiscord-audio-settings', JSON.stringify(newSettings));
+    localStorage.setItem('CHADD-audio-settings', JSON.stringify(newSettings));
     set({ audioSettings: newSettings });
     
     // Check if we need to restart anything
@@ -1487,7 +1487,7 @@ export const useVoiceStore = create<VoiceState & VoiceActions>((set, get) => ({
   },
 
   setMicVolume: (volume) => {
-    localStorage.setItem('ichfickdiscord-mic-volume', volume.toString());
+    localStorage.setItem('CHADD-mic-volume', volume.toString());
     set({ micVolume: volume });
   },
 
@@ -1509,7 +1509,7 @@ export const useVoiceStore = create<VoiceState & VoiceActions>((set, get) => ({
       audio.volume = volume / 100;
     });
     
-    localStorage.setItem('ichfickdiscord-speaker-volume', volume.toString());
+    localStorage.setItem('CHADD-speaker-volume', volume.toString());
     set({ speakerVolume: volume });
     
     console.log(`Speaker volume set to: ${volume}%`);

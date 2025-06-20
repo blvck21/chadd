@@ -1,4 +1,4 @@
-# 🎙️ IchFickDiscord - Retro Voice Chat
+# 🎙️ CHADD - V1.0.1
 
 Ein **hochperformantes Voice-Chat-Programm** mit kristallklarer Audio-Qualität und retro TeamSpeak-Design.
 
@@ -139,7 +139,7 @@ npm run tauri:build   # Production Build
 ## 🏗️ Architektur
 
 ```
-ichfickdiscord/
+CHADD/
 ├── packages/
 │   ├── server/          # WebRTC Signaling Server
 │   │   ├── src/
@@ -219,7 +219,7 @@ room: {
 
 ### Main Interface
 
-![Retro Voice Chat Interface](docs/screenshot-main.png)
+![V1.0.1 Interface](docs/screenshot-main.png)
 
 ### Channel Tree
 

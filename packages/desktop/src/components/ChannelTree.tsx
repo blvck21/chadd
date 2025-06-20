@@ -690,15 +690,35 @@ const ChannelTree: React.FC = () => {
     null
   );
   const [channelIcons, setChannelIcons] = useState<Map<string, string>>(() => {
+    console.log(`🔄 Loading channel icons from localStorage...`);
+
     try {
-      const saved = localStorage.getItem("ichfickdiscord-channel-icons");
+      const saved = localStorage.getItem("CHADD-channel-icons");
+      console.log(`📱 Raw localStorage data:`, saved);
+
       if (saved) {
-        return new Map(JSON.parse(saved));
+        const parsed: [string, string][] = JSON.parse(saved);
+        const iconMap = new Map(parsed);
+
+        console.log(`✅ Loaded ${iconMap.size} channel icons:`, {
+          data: parsed,
+          mapEntries: Array.from(iconMap.entries()),
+        });
+
+        return iconMap;
+      } else {
+        console.log(`ℹ️ No saved channel icons found, using defaults`);
       }
     } catch (error) {
-      console.error("Failed to load channel icons:", error);
+      console.error("❌ Failed to load channel icons:", error);
     }
-    return new Map([["default", "🏠"]]);
+
+    const defaultMap = new Map([["default", "🏠"]]);
+    console.log(
+      `🏠 Using default channel icons:`,
+      Array.from(defaultMap.entries())
+    );
+    return defaultMap;
   });
   const [showIconPicker, setShowIconPicker] = useState<string | null>(null);
 
@@ -722,13 +742,37 @@ const ChannelTree: React.FC = () => {
   ];
 
   const saveChannelIcon = (roomId: string, icon: string) => {
+    console.log(`💾 Saving icon "${icon}" for channel "${roomId}"`);
+
     const newIcons = new Map(channelIcons);
     newIcons.set(roomId, icon);
     setChannelIcons(newIcons);
-    localStorage.setItem(
-      "ichfickdiscord-channel-icons",
-      JSON.stringify(Array.from(newIcons.entries()))
-    );
+
+    try {
+      const iconArray = Array.from(newIcons.entries());
+      const jsonString = JSON.stringify(iconArray);
+      localStorage.setItem("CHADD-channel-icons", jsonString);
+
+      console.log(`✅ Icon saved successfully:`, {
+        roomId,
+        icon,
+        totalIcons: newIcons.size,
+        storedData: jsonString,
+      });
+
+      // Verify the save worked
+      const verification = localStorage.getItem("CHADD-channel-icons");
+      if (verification === jsonString) {
+        console.log(`✅ Icon save verified in localStorage`);
+      } else {
+        console.error(`❌ Icon save verification failed!`, {
+          expected: jsonString,
+          actual: verification,
+        });
+      }
+    } catch (error) {
+      console.error(`❌ Failed to save channel icon:`, error);
+    }
   };
 
   // Load available audio devices
@@ -814,9 +858,7 @@ const ChannelTree: React.FC = () => {
         } catch (error) {
           console.error("Error loading server config:", error);
           // Fallback to localStorage
-          const savedConfig = localStorage.getItem(
-            "ichfickdiscord-server-config"
-          );
+          const savedConfig = localStorage.getItem("CHADD-server-config");
           if (savedConfig) {
             setServerConfig(JSON.parse(savedConfig));
           }
@@ -913,10 +955,7 @@ const ChannelTree: React.FC = () => {
     } catch (error) {
       console.error("Error saving server config:", error);
       // Fallback to localStorage
-      localStorage.setItem(
-        "ichfickdiscord-server-config",
-        JSON.stringify(serverConfig)
-      );
+      localStorage.setItem("CHADD-server-config", JSON.stringify(serverConfig));
       alert(
         "Failed to save to server. Saved locally instead. Server must be restarted to apply changes."
       );
@@ -1160,6 +1199,45 @@ const ChannelTree: React.FC = () => {
       }
     );
   };
+
+  // Debug function for channel icons
+  const debugChannelIcons = () => {
+    console.log("🔍 DEBUG: Channel Icons State");
+    console.log(
+      "Current channelIcons Map:",
+      Array.from(channelIcons.entries())
+    );
+
+    const stored = localStorage.getItem("CHADD-channel-icons");
+    console.log("Raw localStorage data:", stored);
+
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        console.log("Parsed localStorage data:", parsed);
+        console.log("Recreated Map:", Array.from(new Map(parsed).entries()));
+      } catch (error) {
+        console.error("Error parsing stored data:", error);
+      }
+    }
+
+    console.log("Available rooms:");
+    availableRooms.forEach((room) => {
+      console.log(
+        `- ${room.id}: "${room.name}" -> Icon: ${
+          channelIcons.get(room.id) || "🏠 (default)"
+        }`
+      );
+    });
+  };
+
+  // Expose debug function globally for easy access
+  useEffect(() => {
+    (window as any).debugChannelIcons = debugChannelIcons;
+    return () => {
+      delete (window as any).debugChannelIcons;
+    };
+  }, [channelIcons, availableRooms]);
 
   return (
     <Container>

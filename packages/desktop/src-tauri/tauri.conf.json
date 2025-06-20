@@ -7,7 +7,7 @@
     "withGlobalTauri": false
   },
   "package": {
-    "productName": "IchFickDiscord",
+    "productName": "CHADD",
     "version": "1.0.0"
   },
   "tauri": {
@@ -39,7 +39,7 @@
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "com.ichfickdiscord.app",
+      "identifier": "com.CHADD.app",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
@@ -69,7 +69,7 @@
       {
         "fullscreen": false,
         "resizable": true,
-        "title": "IchFickDiscord - Retro Voice Chat",
+        "title": "CHADD - V1.0.1",
         "width": 1200,
         "height": 800,
         "minWidth": 800,

@@ -30,13 +30,13 @@ interface ThemeProviderProps {
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const [themeName, setThemeName] = useState<ThemeName>(() => {
-    const savedTheme = localStorage.getItem("ichfickdiscord-theme");
+    const savedTheme = localStorage.getItem("CHADD-theme");
     return (savedTheme as ThemeName) || "retro-green";
   });
 
   const setTheme = (newThemeName: ThemeName) => {
     setThemeName(newThemeName);
-    localStorage.setItem("ichfickdiscord-theme", newThemeName);
+    localStorage.setItem("CHADD-theme", newThemeName);
   };
 
   const currentTheme = themes[themeName] || defaultTheme;

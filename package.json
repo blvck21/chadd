@@ -1,7 +1,7 @@
 {
-  "name": "ichfickdiscord",
+  "name": "CHADD",
   "version": "1.0.0",
-  "description": "Retro Voice Chat Application with Crystal Clear Audio",
+  "description": "V1.0.1 Application with Crystal Clear Audio",
   "private": true,
   "workspaces": [
     "packages/*"

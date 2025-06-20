@@ -1,8 +1,8 @@
 {
-  "name": "@ichfickdiscord/desktop",
+  "name": "@CHADD/desktop",
   "private": true,
   "version": "1.0.0",
-  "description": "Retro Voice Chat Desktop App",
+  "description": "V1.0.1 Desktop App",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -1,5 +1,15 @@
 use tauri::{Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, CustomMenuItem, SystemTrayMenuItem, AppHandle, api::notification::Notification};
 use serde::{Deserialize, Serialize};
+use std::env;
+
+// Load environment variables from .env files
+fn load_env_vars() {
+    // Try to load from .env.local first (highest priority)
+    if let Err(_) = dotenv::from_filename(".env.local") {
+        // Fallback to .env
+        let _ = dotenv::dotenv();
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 struct GitHubRelease {
@@ -30,15 +40,23 @@ fn greet(name: &str) -> String {
 
 #[tauri::command]
 async fn check_for_updates(app_handle: AppHandle) -> Result<UpdateInfo, String> {
+    // Load environment variables from .env files
+    load_env_vars();
+    
     let current_version = app_handle.package_info().version.to_string();
     
-    // GitHub repository - you'll need to update this to your actual repo
-    let repo_url = "https://api.github.com/repos/YOUR_GITHUB_USERNAME/ichfickdiscord/releases/latest";
+    // GitHub repository - replace YOUR_GITHUB_USERNAME with your actual username!
+    let repo_url = "https://api.github.com/repos/blvck21/chadd/releases/latest";
+    
+    println!("Checking for updates at: {}", repo_url);
     
     match fetch_latest_release(repo_url).await {
         Ok(release) => {
             let latest_version = release.tag_name.trim_start_matches('v');
             let is_newer = compare_versions(&current_version, latest_version);
+            
+            println!("Version comparison: current='{}', latest='{}', is_newer={}", 
+                     current_version, latest_version, is_newer);
             
             Ok(UpdateInfo {
                 available: is_newer,
@@ -64,17 +82,46 @@ async fn check_for_updates(app_handle: AppHandle) -> Result<UpdateInfo, String> 
 
 async fn fetch_latest_release(url: &str) -> Result<GitHubRelease, Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
-    let response = client
+    
+    let mut request = client
         .get(url)
-        .header("User-Agent", "IchFickDiscord-Updater")
-        .send()
-        .await?;
+        .header("User-Agent", "CHADD-Updater")
+        .header("Accept", "application/vnd.github.v3+json");
+    
+    // Try to get GitHub token from environment variables
+    // Priority: GITHUB_TOKEN > GITHUB_ACCESS_TOKEN
+    let token_used = if let Ok(token) = env::var("GITHUB_TOKEN") {
+        println!("Using GITHUB_TOKEN for authentication");
+        request = request.header("Authorization", format!("Bearer {}", token));
+        true
+    } else if let Ok(token) = env::var("GITHUB_ACCESS_TOKEN") {
+        println!("Using GITHUB_ACCESS_TOKEN for authentication");
+        request = request.header("Authorization", format!("Bearer {}", token));
+        true
+    } else {
+        println!("No GitHub token found - trying public access");
+        false
+    };
+    
+    let response = request.send().await?;
     
     if response.status().is_success() {
         let release: GitHubRelease = response.json().await?;
+        println!("Successfully fetched release: {} ({})", release.name, release.tag_name);
         Ok(release)
     } else {
-        Err(format!("HTTP error: {}", response.status()).into())
+        let status = response.status();
+        let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
+        
+        if status == 404 && !token_used {
+            Err("Repository not found or releases are private. This is normal if you haven't created any releases yet, or if releases are private and no token is configured.".into())
+        } else if status == 404 {
+            Err("Repository not found or no releases available. Check repository URL and ensure releases exist.".into())
+        } else if status == 401 || status == 403 {
+            Err("Authentication failed. Check your GitHub token permissions for private repositories.".into())
+        } else {
+            Err(format!("HTTP error {}: {}", status, error_text).into())
+        }
     }
 }
 

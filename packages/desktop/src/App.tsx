@@ -274,13 +274,17 @@ function App() {
     setIsUpdating(true);
     try {
       const result = (await invoke("check_for_updates")) as UpdateInfo;
+      console.log("Update check result:", result);
       setUpdateInfo(result);
 
       if (result.available) {
+        console.log("Update available, showing dialog");
         setShowUpdateDialog(true);
       } else if (result.error) {
+        console.log("Update check failed with error:", result.error);
         alert(`Update check failed: ${result.error}`);
       } else {
+        console.log("No update available, showing up-to-date message");
         alert(`You're running the latest version (${result.current_version})`);
       }
     } catch (error) {
@@ -495,7 +499,7 @@ function App() {
       return (
         <EmptyState>
           <EmptyIcon>🏠</EmptyIcon>
-          <div>Welcome to IchFickDiscord</div>
+          <div>Welcome to CHADD</div>
           <div style={{ fontSize: "14px", opacity: 0.7 }}>
             Connect to a server to start chatting with friends
           </div>
@@ -518,7 +522,7 @@ function App() {
     <AppContainer>
       <TopBar>
         <LeftSection>
-          <AppTitle>IchFickDiscord</AppTitle>
+          <AppTitle>CHADD</AppTitle>
           <ConnectionStatus connected={isConnected}>
             {isConnected ? <FaWifi /> : <FaPlug />}
             {isConnected ? "Connected" : "Disconnected"}

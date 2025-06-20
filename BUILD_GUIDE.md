@@ -1,4 +1,4 @@
-# IchFickDiscord Build Guide
+# CHADD Build Guide
 
 This guide covers building the server executable for Debian and setting up the Windows client with auto-updater functionality.
 
@@ -32,7 +32,7 @@ npm install
 npm run build:executable
 ```
 
-This creates `ichfickdiscord-server` executable.
+This creates `CHADD-server` executable.
 
 ### 3. Create Debian Package
 
@@ -45,28 +45,28 @@ This creates a `.deb` package in `packages/server/build/`.
 ### 4. Install on Debian/Ubuntu
 
 ```bash
-sudo dpkg -i ichfickdiscord-server_1.0.0_amd64.deb
+sudo dpkg -i CHADD-server_1.0.0_amd64.deb
 ```
 
 ### 5. Server Management
 
 ```bash
 # Start the service
-sudo systemctl start ichfickdiscord-server
+sudo systemctl start CHADD-server
 
 # Enable auto-start on boot
-sudo systemctl enable ichfickdiscord-server
+sudo systemctl enable CHADD-server
 
 # Check status
-sudo systemctl status ichfickdiscord-server
+sudo systemctl status CHADD-server
 
 # View logs
-sudo journalctl -u ichfickdiscord-server -f
+sudo journalctl -u CHADD-server -f
 ```
 
 ### Configuration
 
-Server configuration is located at `/etc/ichfickdiscord/server.config.json` after installation.
+Server configuration is located at `/etc/CHADD/server.config.json` after installation.
 
 ## Building the Windows Client
 
@@ -153,7 +153,7 @@ To publish a new version:
        "version": "1.0.1",
        "notes": "Bug fixes and improvements",
        "signature": "signature_here",
-       "filename": "IchFickDiscord_1.0.1_x64_en-US.msi"
+       "filename": "CHADD_1.0.1_x64_en-US.msi"
      }'
    ```
 
@@ -169,7 +169,7 @@ The client now displays the current version in the bottom-right corner. Features
 ## Directory Structure
 
 ```
-ichfickdiscord/
+CHADD/
 ├── packages/
 │   ├── server/
 │   │   ├── build/                 # Generated .deb packages
@@ -210,9 +210,9 @@ ichfickdiscord/
 
 ### Server Issues
 
-- Check logs: `sudo journalctl -u ichfickdiscord-server -f`
-- Check service status: `sudo systemctl status ichfickdiscord-server`
-- Verify configuration: `cat /etc/ichfickdiscord/server.config.json`
+- Check logs: `sudo journalctl -u CHADD-server -f`
+- Check service status: `sudo systemctl status CHADD-server`
+- Verify configuration: `cat /etc/CHADD/server.config.json`
 
 ### Client Issues
 

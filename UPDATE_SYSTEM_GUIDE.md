@@ -2,7 +2,7 @@
 
 ## 🚀 Overview
 
-I've implemented a comprehensive update system for IchFickDiscord that checks for updates from GitHub releases and provides a responsive server browser. Here's what's been added and how to set it up.
+I've implemented a comprehensive update system for CHADD that checks for updates from GitHub releases and provides a responsive server browser. Here's what's been added and how to set it up.
 
 ## ✨ What's New
 
@@ -30,10 +30,10 @@ In `packages/desktop/src-tauri/src/lib.rs`, line 32, update the repository URL:
 
 ```rust
 // Change this line:
-let repo_url = "https://api.github.com/repos/YOUR_USERNAME/ichfickdiscord/releases/latest";
+let repo_url = "https://api.github.com/repos/YOUR_USERNAME/CHADD/releases/latest";
 
 // To your actual repository:
-let repo_url = "https://api.github.com/repos/yourusername/ichfickdiscord/releases/latest";
+let repo_url = "https://api.github.com/repos/yourusername/CHADD/releases/latest";
 ```
 
 ### Step 2: Build the Application
@@ -171,4 +171,4 @@ The responsive server browser will:
 - ✅ Maintain the retro terminal aesthetic
 - ✅ Offer improved touch interactions
 
-Enjoy your enhanced IchFickDiscord experience! 🎉
+Enjoy your enhanced CHADD experience! 🎉

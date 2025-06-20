@@ -393,11 +393,11 @@ const StatusIndicator = styled.div<{ running: boolean }>`
 
 const defaultConfig: ServerConfig = {
   server: {
-    name: "IchFickDiscord Server",
-    description: "High-quality retro voice chat server",
+    name: "CHADD Server",
+    description: "High-quality V1.0.1 server",
     port: 27890,
     maxUsers: 100,
-    motd: "Welcome to IchFickDiscord! 🎙️ Enjoy crystal clear voice communication.",
+    motd: "Welcome to CHADD! 🎙️ Enjoy crystal clear voice communication.",
     password: "",
     requirePassword: false,
   },
@@ -445,7 +445,7 @@ export default function ServerSettings({
 
   useEffect(() => {
     // Load saved config
-    const savedConfig = localStorage.getItem("ichfickdiscord-server-config");
+    const savedConfig = localStorage.getItem("CHADD-server-config");
     if (savedConfig) {
       try {
         setConfig(JSON.parse(savedConfig));
@@ -456,10 +456,7 @@ export default function ServerSettings({
   }, []);
 
   const saveConfig = () => {
-    localStorage.setItem(
-      "ichfickdiscord-server-config",
-      JSON.stringify(config)
-    );
+    localStorage.setItem("CHADD-server-config", JSON.stringify(config));
   };
 
   const updateConfig = (
@@ -490,7 +487,7 @@ export default function ServerSettings({
           <Input
             value={config.server.name}
             onChange={(e) => updateConfig("server", "name", e.target.value)}
-            placeholder="My IchFickDiscord Server"
+            placeholder="My CHADD Server"
           />
         </InputGroup>
         <InputGroup>

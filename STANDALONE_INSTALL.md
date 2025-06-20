@@ -1,4 +1,4 @@
-# IchFickDiscord - Standalone Server Installation
+# CHADD - Standalone Server Installation
 
 🚀 **One-command installation for Debian/Ubuntu servers**
 
@@ -7,7 +7,7 @@
 Run this single command on your Debian/Ubuntu server:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/your-repo/ichfickdiscord/main/standalone-debian-setup.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/your-repo/CHADD/main/standalone-debian-setup.sh | sudo bash
 ```
 
 ## What This Does
@@ -30,13 +30,13 @@ Your server will be running at: `http://YOUR_SERVER_IP:3001`
 ### Management Commands
 
 ```bash
-ichfickdiscord start     # Start the server
-ichfickdiscord stop      # Stop the server
-ichfickdiscord restart   # Restart the server
-ichfickdiscord status    # Show status
-ichfickdiscord logs      # View live logs
-ichfickdiscord info      # Show server information
-ichfickdiscord config    # Edit configuration
+CHADD start     # Start the server
+CHADD stop      # Stop the server
+CHADD restart   # Restart the server
+CHADD status    # Show status
+CHADD logs      # View live logs
+CHADD info      # Show server information
+CHADD config    # Edit configuration
 ```
 
 ## Manual Installation
@@ -45,7 +45,7 @@ If you prefer to download and review the script first:
 
 ```bash
 # Download the installer
-wget https://raw.githubusercontent.com/your-repo/ichfickdiscord/main/standalone-debian-setup.sh
+wget https://raw.githubusercontent.com/your-repo/CHADD/main/standalone-debian-setup.sh
 
 # Make it executable
 chmod +x standalone-debian-setup.sh
@@ -77,7 +77,7 @@ sudo ./standalone-debian-setup.sh
 
 ## Server Configuration
 
-The server configuration is located at `/opt/ichfickdiscord/server.config.json`:
+The server configuration is located at `/opt/CHADD/server.config.json`:
 
 ```json
 {
@@ -91,7 +91,7 @@ The server configuration is located at `/opt/ichfickdiscord/server.config.json`:
   },
   "logging": {
     "level": "info",
-    "file": "/opt/ichfickdiscord/logs/server.log"
+    "file": "/opt/CHADD/logs/server.log"
   },
   "voice": {
     "quality": "high",
@@ -106,7 +106,7 @@ The server configuration is located at `/opt/ichfickdiscord/server.config.json`:
 }
 ```
 
-Edit with: `ichfickdiscord config`
+Edit with: `CHADD config`
 
 ## API Endpoints
 
@@ -120,13 +120,13 @@ Edit with: `ichfickdiscord config`
 ### Check if server is running:
 
 ```bash
-ichfickdiscord status
+CHADD status
 ```
 
 ### View logs:
 
 ```bash
-ichfickdiscord logs
+CHADD logs
 ```
 
 ### Check network connectivity:
@@ -138,7 +138,7 @@ curl http://localhost:3001
 ### Restart if needed:
 
 ```bash
-ichfickdiscord restart
+CHADD restart
 ```
 
 ### Check firewall:
@@ -153,16 +153,16 @@ To completely remove the server:
 
 ```bash
 # Stop and disable service
-sudo systemctl stop ichfickdiscord
-sudo systemctl disable ichfickdiscord
+sudo systemctl stop CHADD
+sudo systemctl disable CHADD
 
 # Remove files
-sudo rm -rf /opt/ichfickdiscord
-sudo rm /etc/systemd/system/ichfickdiscord.service
-sudo rm /usr/local/bin/ichfickdiscord
+sudo rm -rf /opt/CHADD
+sudo rm /etc/systemd/system/CHADD.service
+sudo rm /usr/local/bin/CHADD
 
 # Remove user
-sudo userdel ichfickdiscord
+sudo userdel CHADD
 
 # Reload systemd
 sudo systemctl daemon-reload
@@ -172,11 +172,11 @@ sudo systemctl daemon-reload
 
 If you encounter issues:
 
-1. Check the logs: `ichfickdiscord logs`
-2. Verify service status: `ichfickdiscord status`
-3. Check server info: `ichfickdiscord info`
+1. Check the logs: `CHADD logs`
+2. Verify service status: `CHADD status`
+3. Check server info: `CHADD info`
 4. Test network connectivity: `curl http://localhost:3001`
 
 ---
 
-**🎉 Your retro voice chat server is now ready to use!**
+**🎉 Your V1.0.1 server is now ready to use!**
