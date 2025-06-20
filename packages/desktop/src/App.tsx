@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import { io } from "socket.io-client";
 import ChannelTree from "./components/ChannelTree";
@@ -15,6 +15,7 @@ import {
   FaDownload,
 } from "react-icons/fa";
 import { invoke } from "@tauri-apps/api/tauri";
+import { listen } from "@tauri-apps/api/event";
 
 interface UpdateInfo {
   available: boolean;
@@ -23,6 +24,14 @@ interface UpdateInfo {
   download_url?: string;
   release_notes?: string;
   error?: string;
+  asset_size?: number;
+}
+
+interface DownloadProgress {
+  downloaded: number;
+  total: number;
+  percentage: number;
+  status: string;
 }
 
 const AppContainer = styled.div`
@@ -189,11 +198,167 @@ const EmptyState = styled.div`
   font-size: 16px;
   text-align: center;
   gap: 16px;
+  position: relative;
+  overflow: hidden;
 `;
 
-const EmptyIcon = styled.div`
-  font-size: 64px;
-  opacity: 0.5;
+const MatrixContainer = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.1;
+  z-index: 0;
+`;
+
+const MatrixCanvas = styled.canvas`
+  width: 100%;
+  height: 100%;
+`;
+
+const WelcomeContent = styled.div`
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+`;
+
+const CHADDAscii = styled.pre`
+  font-family: "Courier New", monospace;
+  color: var(--color-accent);
+  font-size: 12px;
+  line-height: 1;
+  text-shadow: 0 0 10px var(--color-accent);
+  animation: glow 2s ease-in-out infinite alternate;
+  margin: 0;
+
+  @keyframes glow {
+    from {
+      text-shadow: 0 0 5px var(--color-accent), 0 0 10px var(--color-accent);
+      filter: brightness(1);
+    }
+    to {
+      text-shadow: 0 0 10px var(--color-accent), 0 0 20px var(--color-accent),
+        0 0 30px var(--color-accent);
+      filter: brightness(1.2);
+    }
+  }
+`;
+
+const WelcomeText = styled.div`
+  font-size: 24px;
+  color: var(--color-accent);
+  text-shadow: 0 0 10px var(--color-accent);
+  margin-bottom: 8px;
+`;
+
+const SubText = styled.div`
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+`;
+
+const ConnectButton = styled(Button)`
+  /* No animations - instant appearance */
+`;
+
+const ProgressContainer = styled.div`
+  margin: 16px 0;
+  width: 100%;
+`;
+
+const ProgressLabel = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+`;
+
+const ProgressBarContainer = styled.div`
+  width: 100%;
+  height: 8px;
+  background: var(--color-surface);
+  border-radius: 4px;
+  overflow: hidden;
+`;
+
+const ProgressBar = styled.div.withConfig({
+  shouldForwardProp: (prop) => prop !== "percentage",
+})<{ percentage: number }>`
+  width: ${(props) => props.percentage}%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-accent), #00ff88);
+  transition: width 0.3s ease;
+  border-radius: 4px;
+`;
+
+const UpdateStatus = styled.div`
+  margin: 12px 0;
+  padding: 12px;
+  background: var(--color-surface);
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--color-text-primary);
+  text-align: center;
+`;
+
+const UpdateNotification = styled.div.withConfig({
+  shouldForwardProp: (prop) => prop !== "show",
+})<{ show: boolean }>`
+  position: fixed;
+  top: 50px;
+  right: 20px;
+  background: var(--color-secondary);
+  border: 2px solid var(--color-accent);
+  border-radius: 8px;
+  padding: 16px;
+  min-width: 300px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  transform: translateX(${(props) => (props.show ? "0" : "350px")});
+  transition: transform 0.3s ease;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-surface);
+  }
+`;
+
+const NotificationTitle = styled.div`
+  color: var(--color-accent);
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const NotificationMessage = styled.div`
+  color: var(--color-text-primary);
+  font-size: 12px;
+  line-height: 1.4;
+`;
+
+const NotificationClose = styled.button`
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+
+  &:hover {
+    color: var(--color-text-primary);
+  }
 `;
 
 const VersionDisplay = styled.div`
@@ -219,7 +384,78 @@ const VersionDisplay = styled.div`
   }
 `;
 
+// Matrix Animation Component
+const MatrixAnimation: React.FC = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Set canvas size
+    const resizeCanvas = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    };
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
+    // Matrix characters (including some CHADD letters)
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()CHADD".split(
+      ""
+    );
+    const fontSize = 14;
+    const columns = Math.floor(canvas.width / fontSize);
+    const drops: number[] = [];
+
+    // Initialize drops
+    for (let i = 0; i < columns; i++) {
+      drops[i] = Math.random() * -100;
+    }
+
+    const draw = () => {
+      // Black background with slight transparency for trailing effect
+      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Green text
+      ctx.fillStyle = "#00ff00";
+      ctx.font = `${fontSize}px 'Courier New', monospace`;
+
+      for (let i = 0; i < drops.length; i++) {
+        // Random character
+        const char = chars[Math.floor(Math.random() * chars.length)];
+
+        // Draw character
+        ctx.fillText(char, i * fontSize, drops[i] * fontSize);
+
+        // Reset drop randomly
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    };
+
+    const interval = setInterval(draw, 50);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("resize", resizeCanvas);
+    };
+  }, []);
+
+  return <MatrixCanvas ref={canvasRef} />;
+};
+
 function App() {
+  console.log("App component rendering...");
+
+  const [isLoading, setIsLoading] = useState(true);
+
   const {
     socket,
     setSocket,
@@ -234,6 +470,15 @@ function App() {
     setCurrentUser,
   } = useVoiceStore();
 
+  // Simple loading check to ensure DOM is ready
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+      console.log("App initialization complete");
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   const [showServerBrowser, setShowServerBrowser] = useState(false);
   const [currentServerHost, setCurrentServerHost] = useState<string>("");
   const [currentServerPort, setCurrentServerPort] = useState<number>(0);
@@ -243,6 +488,13 @@ function App() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] =
+    useState<DownloadProgress | null>(null);
+  const [silentUpdateInfo, setSilentUpdateInfo] = useState<UpdateInfo | null>(
+    null
+  );
+  const [showUpdateNotification, setShowUpdateNotification] = useState(false);
 
   // Check if we need to show reconnect dialog
   useEffect(() => {
@@ -265,7 +517,36 @@ function App() {
       }
     };
 
+    const checkForUpdatesOnStartup = async () => {
+      try {
+        // Wait a few seconds after startup to avoid interfering with initialization
+        setTimeout(async () => {
+          const result = (await invoke(
+            "check_for_updates_silent"
+          )) as UpdateInfo;
+          setSilentUpdateInfo(result);
+
+          if (result.available) {
+            console.log("Update available on startup:", result);
+            setShowUpdateNotification(true);
+          }
+        }, 3000); // Check after 3 seconds
+      } catch (error) {
+        console.error("Silent update check failed:", error);
+      }
+    };
+
     loadVersion();
+    checkForUpdatesOnStartup();
+
+    // Listen for download progress events
+    const setupProgressListener = async () => {
+      await listen<DownloadProgress>("download-progress", (event) => {
+        setDownloadProgress(event.payload);
+      });
+    };
+
+    setupProgressListener();
   }, []);
 
   const handleCheckForUpdates = async () => {
@@ -295,10 +576,34 @@ function App() {
     }
   };
 
-  const handleDownloadUpdate = () => {
-    if (updateInfo?.download_url) {
-      window.open(updateInfo.download_url, "_blank");
-      setShowUpdateDialog(false);
+  const handleDownloadUpdate = async () => {
+    if (!updateInfo?.download_url || isDownloading) return;
+
+    setIsDownloading(true);
+    setDownloadProgress({
+      downloaded: 0,
+      total: updateInfo.asset_size || 0,
+      percentage: 0,
+      status: "Starting download...",
+    });
+
+    try {
+      await invoke("download_and_install_update", {
+        downloadUrl: updateInfo.download_url,
+      });
+    } catch (error) {
+      console.error("Update download failed:", error);
+      alert(`Update download failed: ${error}`);
+      setIsDownloading(false);
+      setDownloadProgress(null);
+    }
+  };
+
+  const handleShowUpdateFromNotification = () => {
+    if (silentUpdateInfo) {
+      setUpdateInfo(silentUpdateInfo);
+      setShowUpdateDialog(true);
+      setShowUpdateNotification(false);
     }
   };
 
@@ -317,11 +622,25 @@ function App() {
         disconnect();
       }
 
-      // Create new socket connection
-      const newSocket = io(`http://${host}:${port}`, {
+      // Use HTTP protocol for both API and WebSocket connections
+      const protocol = "http";
+      // Use IP address for better certificate handling in Tauri
+      const serverHost = host === "localhost" ? "127.0.0.1" : host;
+      const socketUrl = `${protocol}://${serverHost}:${port}`;
+
+      console.log(`Connecting to: ${socketUrl}`);
+
+      // Create new socket connection with HTTP settings
+      const newSocket = io(socketUrl, {
         transports: ["websocket", "polling"],
-        timeout: 10000,
+        timeout: 20000,
         forceNew: true,
+        upgrade: true,
+        secure: false, // Use HTTP/WS instead of HTTPS/WSS
+        autoConnect: true,
+        reconnection: true,
+        reconnectionAttempts: 3,
+        reconnectionDelay: 1000,
       });
 
       // Set up basic connection handlers
@@ -496,16 +815,44 @@ function App() {
 
   const renderMainContent = () => {
     if (!isConnected) {
+      const chaddAscii = `
+ ██████╗██╗  ██╗ █████╗ ██████╗ ██████╗ 
+██╔════╝██║  ██║██╔══██╗██╔══██╗██╔══██╗
+██║     ███████║███████║██║  ██║██║  ██║
+██║     ██╔══██║██╔══██║██║  ██║██║  ██║
+╚██████╗██║  ██║██║  ██║██████╔╝██████╔╝
+ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═════╝ 
+
+    ═══════════════════════════════════════
+    ║      VOICE COMMUNICATION CLIENT     ║
+    ═══════════════════════════════════════
+
+    [STATUS: READY] [VOICE: ENABLED]`;
+
       return (
         <EmptyState>
-          <EmptyIcon>🏠</EmptyIcon>
-          <div>Welcome to CHADD</div>
-          <div style={{ fontSize: "14px", opacity: 0.7 }}>
-            Connect to a server to start chatting with friends
-          </div>
-          <Button variant="primary" onClick={() => setShowServerBrowser(true)}>
-            <FaServer /> Connect to Server
-          </Button>
+          <MatrixContainer>
+            <MatrixAnimation />
+          </MatrixContainer>
+
+          <WelcomeContent>
+            <CHADDAscii>{chaddAscii}</CHADDAscii>
+
+            <WelcomeText>Welcome to CHADD</WelcomeText>
+
+            <SubText>
+              Voice Communication Client
+              <br />
+              Secure • Reliable • Fast
+            </SubText>
+
+            <ConnectButton
+              variant="primary"
+              onClick={() => setShowServerBrowser(true)}
+            >
+              <FaServer /> Connect to Server
+            </ConnectButton>
+          </WelcomeContent>
         </EmptyState>
       );
     }
@@ -517,6 +864,36 @@ function App() {
       </>
     );
   };
+
+  // Show simple loading screen while initializing
+  if (isLoading) {
+    return (
+      <div
+        style={{
+          width: "100%",
+          height: "100vh",
+          background: "#1a1a1a",
+          color: "#00ff00",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: '"Courier New", monospace',
+          fontSize: "16px",
+          textAlign: "center",
+        }}
+      >
+        <div style={{ marginBottom: "20px" }}>Loading CHADD...</div>
+        <div style={{ fontSize: "12px", opacity: 0.7 }}>
+          {">> Loading interface"}
+          <br />
+          {">> Preparing voice systems"}
+          <br />
+          {">> Ready"}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AppContainer>
@@ -538,9 +915,24 @@ function App() {
           <TopBarButton onClick={() => setShowServerBrowser(true)}>
             <FaServer /> Servers
           </TopBarButton>
-          <TopBarButton onClick={handleCheckForUpdates} disabled={isUpdating}>
+          <TopBarButton
+            onClick={handleCheckForUpdates}
+            disabled={isUpdating}
+            style={{
+              color: silentUpdateInfo?.available
+                ? "var(--color-accent)"
+                : "inherit",
+              borderColor: silentUpdateInfo?.available
+                ? "var(--color-accent)"
+                : "var(--color-border)",
+            }}
+          >
             <FaDownload />
-            {isUpdating ? "Checking..." : "Updates"}
+            {isUpdating
+              ? "Checking..."
+              : silentUpdateInfo?.available
+              ? "Update!"
+              : "Updates"}
           </TopBarButton>
           {isConnected && (
             <TopBarButton onClick={handleDisconnect}>
@@ -604,33 +996,134 @@ function App() {
       {showUpdateDialog && updateInfo && (
         <DisconnectedOverlay show={true}>
           <ReconnectCard>
-            <ReconnectTitle>🚀 Update Available</ReconnectTitle>
+            <ReconnectTitle>
+              {isDownloading ? "🔄 Installing Update" : "🚀 Update Available"}
+            </ReconnectTitle>
             <ReconnectMessage>
-              A new version is available!
-              <br />
-              Current: v{updateInfo.current_version}
-              <br />
-              Latest: v{updateInfo.latest_version}
-              {updateInfo.release_notes && (
-                <div
-                  style={{ marginTop: "12px", fontSize: "12px", opacity: 0.8 }}
-                >
-                  {updateInfo.release_notes.substring(0, 200)}
-                  {updateInfo.release_notes.length > 200 && "..."}
-                </div>
+              {isDownloading ? (
+                <>
+                  <UpdateStatus>
+                    {downloadProgress?.status || "Preparing update..."}
+                  </UpdateStatus>
+                  <ProgressContainer>
+                    <ProgressLabel>
+                      <span>
+                        {downloadProgress
+                          ? `${(
+                              downloadProgress.downloaded /
+                              1024 /
+                              1024
+                            ).toFixed(1)} MB`
+                          : "0 MB"}
+                      </span>
+                      <span>
+                        {downloadProgress
+                          ? `${(downloadProgress.total / 1024 / 1024).toFixed(
+                              1
+                            )} MB`
+                          : updateInfo.asset_size
+                          ? `${(updateInfo.asset_size / 1024 / 1024).toFixed(
+                              1
+                            )} MB`
+                          : "Unknown size"}
+                      </span>
+                    </ProgressLabel>
+                    <ProgressBarContainer>
+                      <ProgressBar
+                        percentage={downloadProgress?.percentage || 0}
+                      />
+                    </ProgressBarContainer>
+                    <div
+                      style={{
+                        textAlign: "center",
+                        marginTop: "8px",
+                        fontSize: "14px",
+                      }}
+                    >
+                      {downloadProgress?.percentage.toFixed(1) || 0}%
+                    </div>
+                  </ProgressContainer>
+                </>
+              ) : (
+                <>
+                  A new version is available!
+                  <br />
+                  Current: v{updateInfo.current_version}
+                  <br />
+                  Latest: v{updateInfo.latest_version}
+                  {updateInfo.asset_size && (
+                    <div
+                      style={{
+                        marginTop: "8px",
+                        fontSize: "12px",
+                        opacity: 0.7,
+                      }}
+                    >
+                      Download size:{" "}
+                      {(updateInfo.asset_size / 1024 / 1024).toFixed(1)} MB
+                    </div>
+                  )}
+                  {updateInfo.release_notes && (
+                    <div
+                      style={{
+                        marginTop: "12px",
+                        fontSize: "12px",
+                        opacity: 0.8,
+                      }}
+                    >
+                      {updateInfo.release_notes.substring(0, 200)}
+                      {updateInfo.release_notes.length > 200 && "..."}
+                    </div>
+                  )}
+                </>
               )}
             </ReconnectMessage>
-            <Button variant="primary" onClick={handleDownloadUpdate}>
-              📥 Download Update
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => setShowUpdateDialog(false)}
-            >
-              Later
-            </Button>
+            {!isDownloading ? (
+              <>
+                <Button
+                  variant="primary"
+                  onClick={handleDownloadUpdate}
+                  disabled={!updateInfo.download_url}
+                >
+                  🚀 Install Update
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowUpdateDialog(false)}
+                >
+                  Later
+                </Button>
+              </>
+            ) : (
+              <Button variant="secondary" disabled>
+                Installing... Please wait
+              </Button>
+            )}
           </ReconnectCard>
         </DisconnectedOverlay>
+      )}
+
+      {/* Update Notification */}
+      {showUpdateNotification && silentUpdateInfo && (
+        <UpdateNotification
+          show={showUpdateNotification}
+          onClick={handleShowUpdateFromNotification}
+        >
+          <NotificationClose
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowUpdateNotification(false);
+            }}
+          >
+            ✕
+          </NotificationClose>
+          <NotificationTitle>🚀 Update Available</NotificationTitle>
+          <NotificationMessage>
+            Version {silentUpdateInfo.latest_version} is now available!
+            <br />
+            Click to install the update.
+          </NotificationMessage>
+        </UpdateNotification>
       )}
 
       {/* Version Display */}

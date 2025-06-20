@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
+import { fetch as tauriFetch } from "@tauri-apps/api/http";
 
 interface ServerInfo {
   name: string;
@@ -565,17 +566,22 @@ export default function ServerBrowser({ onConnect, onClose }: Props) {
       serverList.map(async (server) => {
         try {
           const startTime = Date.now();
-          const response = await fetch(
+          const response = await tauriFetch(
             `http://${server.host}:${server.port}/api/server-info`,
             {
               method: "GET",
-              signal: AbortSignal.timeout(5000),
+              timeout: 5000,
             }
           );
 
-          if (response.ok) {
-            const serverInfo = await response.json();
+          if (response.ok && response.data) {
+            const serverInfo = response.data as ServerInfo;
             const ping = Date.now() - startTime;
+
+            console.log(
+              `Server ${server.host}:${server.port} is online (${ping}ms)`,
+              serverInfo
+            );
 
             return {
               ...server,
@@ -584,9 +590,17 @@ export default function ServerBrowser({ onConnect, onClose }: Props) {
               isOnline: true,
               lastSeen: new Date(),
             };
+          } else {
+            console.log(
+              `Server ${server.host}:${server.port} returned bad response:`,
+              response.status
+            );
           }
         } catch (error) {
-          // Server is offline
+          console.log(
+            `Server ${server.host}:${server.port} is offline:`,
+            error
+          );
         }
 
         return {
@@ -611,14 +625,22 @@ export default function ServerBrowser({ onConnect, onClose }: Props) {
 
     try {
       const startTime = Date.now();
-      const response = await fetch(`http://${host}:${port}/api/server-info`, {
-        method: "GET",
-        signal: AbortSignal.timeout(5000),
-      });
+      const response = await tauriFetch(
+        `http://${host}:${port}/api/server-info`,
+        {
+          method: "GET",
+          timeout: 5000,
+        }
+      );
 
-      if (response.ok) {
-        const serverInfo = await response.json();
+      if (response.ok && response.data) {
+        const serverInfo = response.data as ServerInfo;
         const ping = Date.now() - startTime;
+
+        console.log(
+          `Successfully added server ${host}:${port} (${ping}ms)`,
+          serverInfo
+        );
 
         const newServer: ServerListItem = {
           ...serverInfo,

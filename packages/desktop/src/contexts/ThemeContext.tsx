@@ -30,18 +30,28 @@ interface ThemeProviderProps {
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const [themeName, setThemeName] = useState<ThemeName>(() => {
-    const savedTheme = localStorage.getItem("CHADD-theme");
-    return (savedTheme as ThemeName) || "retro-green";
+    try {
+      const savedTheme = localStorage.getItem("CHADD-theme");
+      return (savedTheme as ThemeName) || "retro-green";
+    } catch (error) {
+      console.warn("localStorage not available, using default theme");
+      return "retro-green";
+    }
   });
 
   const setTheme = (newThemeName: ThemeName) => {
     setThemeName(newThemeName);
-    localStorage.setItem("CHADD-theme", newThemeName);
+    try {
+      localStorage.setItem("CHADD-theme", newThemeName);
+    } catch (error) {
+      console.warn("Could not save theme to localStorage");
+    }
   };
 
   const currentTheme = themes[themeName] || defaultTheme;
 
   useEffect(() => {
+    console.log("Applying theme:", themeName, currentTheme);
     // Apply theme CSS variables to root
     const root = document.documentElement;
     const theme = currentTheme;

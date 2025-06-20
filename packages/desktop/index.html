@@ -6,12 +6,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CHADD - V1.0.1</title>
     <style>
-      body {
+      html, body, #root {
         margin: 0;
         padding: 0;
+        width: 100%;
+        height: 100%;
         font-family: "Courier New", monospace;
-        background: #1e1e1e;
+        background: #1e1e1e !important;
+        color: #e0e0e0;
         overflow: hidden;
+      }
+      
+      /* Fallback in case React doesn't load */
+      #root:empty::before {
+        content: "Loading CHADD...\A\A[████████████████████████████████████]\A\A>> Loading interface\A>> Preparing voice systems\A>> Ready";
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        color: #00ff00;
+        font-size: 14px;
+        font-family: 'Courier New', monospace;
+        text-align: center;
+        white-space: pre-line;
+        animation: matrixGlow 2s ease-in-out infinite alternate;
+      }
+      
+      @keyframes matrixGlow {
+        from { 
+          text-shadow: 0 0 5px #00ff00;
+          filter: brightness(1);
+        }
+        to { 
+          text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
+          filter: brightness(1.2);
+        }
       }
     </style>
   </head>

@@ -8,11 +8,16 @@
   },
   "package": {
     "productName": "CHADD",
-    "version": "1.0.0"
+    "version": "1.0.1"
   },
   "tauri": {
     "allowlist": {
       "all": false,
+      "http": {
+        "all": true,
+        "request": true,
+        "scope": ["http://**", "https://**"]
+      },
       "shell": {
         "all": false,
         "open": true
@@ -33,6 +38,14 @@
       },
       "globalShortcut": {
         "all": true
+      },
+      "dialog": {
+        "all": false,
+        "ask": true,
+        "confirm": true,
+        "message": true,
+        "open": true,
+        "save": true
       }
     },
 
@@ -58,7 +71,8 @@
       }
     },
     "security": {
-      "csp": "default-src 'self'; img-src 'self' asset: https://asset.localhost; style-src 'self' 'unsafe-inline'; font-src 'self' asset: https://asset.localhost; connect-src 'self' ws://localhost:* http://localhost:* https://*.webrtc.org;"
+      "csp": "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src 'self' http: https: ws: wss: http://*:* https://*:* ws://*:* wss://*:*; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https:; font-src 'self' data: https:; img-src 'self' data: https: http:; media-src 'self' data: https: http:;",
+      "dangerousDisableAssetCspModification": true
     },
     "systemTray": {
       "iconPath": "icons/icon.png",

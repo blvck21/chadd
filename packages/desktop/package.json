@@ -1,7 +1,7 @@
 {
   "name": "@CHADD/desktop",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "V1.0.1 Desktop App",
   "type": "module",
   "scripts": {

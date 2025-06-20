@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { Socket } from 'socket.io-client';
+import { fetch as tauriFetch } from '@tauri-apps/api/http';
 import { User, Room, VoiceConnection } from '../types';
 
 interface VoiceState {
@@ -1563,9 +1564,9 @@ export const useVoiceStore = create<VoiceState & VoiceActions>((set, get) => ({
         return;
       }
       
-      const response = await fetch(`http://${serverHost}:${serverPort}/api/messages/${roomId}?limit=50`);
+      const response = await tauriFetch(`http://${serverHost}:${serverPort}/api/messages/${roomId}?limit=50`);
       if (response.ok) {
-        const data = await response.json();
+        const data = response.data as { messages: any[] };
         console.log(`Loaded ${data.messages.length} messages for room ${roomId}:`, data.messages);
         const { chatMessages } = get();
         const newChatMessages = new Map(chatMessages);
@@ -1573,7 +1574,7 @@ export const useVoiceStore = create<VoiceState & VoiceActions>((set, get) => ({
         set({ chatMessages: newChatMessages });
         console.log(`Chat history updated for room ${roomId}`);
       } else {
-        console.error(`Failed to load chat history for room ${roomId}:`, response.status, response.statusText);
+        console.error(`Failed to load chat history for room ${roomId}:`, response.status);
       }
     } catch (error) {
       console.error('Failed to load chat history:', error);
